@@ -1,113 +1,186 @@
+"use client";
+import Counter from "@/components/Counter";
+import CartIcon from "@/components/icons/CartIcon";
 import Image from "next/image";
+import { useState } from "react";
+import CartModal from "@/components/CartModal";
+import Header from "@/components/Header";
+import { useCartStore } from "@/store/cartStore";
+import { products } from "@/data/products";
+import LightBox from "@/components/LightBox";
+import NextIcon from "@/components/icons/NextIcon";
+import PrevIcon from "@/components/icons/PrevIcon";
 
 export default function Home() {
+  const [activeThumbIndex, setActiveThumbIndex] = useState(0);
+  const [mainImageIndex, setMainImageIndex] = useState(0);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { cartItems, setCartItems, quantity } = useCartStore((state) => state);
+  const [isLightBoxOpen, setIsLightBoxOpen] = useState(false);
+
+  const product: Product | undefined = products.find(
+    (product) => product.id === 1
+  );
+
+  const handleClickThumb = (thumb: number) => {
+    setActiveThumbIndex(thumb);
+    setMainImageIndex(thumb);
+  };
+
+  const handleClickCartIcon = (flag: boolean) => {
+    setIsCartModalOpen(flag);
+  };
+
+  const handleClickMenuIcon = (flag: boolean) => {
+    setIsMobileMenuOpen(flag);
+  };
+
+  const handleClickAddToCart = () => {
+    product && setCartItems(product);
+  };
+
+  const handleCloseLightBox = () => {
+    setIsLightBoxOpen(false);
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <>
+      <Header
+        handleCartOpen={handleClickCartIcon}
+        handleMenuOpen={handleClickMenuIcon}
+      />
+      <main
+        className={`w-full md:w-[1110px] mx-auto p-0 md:p-12 grid grid-col-1 grid-gap-2 md:grid-cols-2 md:grid-gap-[125px] relative ${
+          isMobileMenuOpen ? "h-[calc(100vh-91px)] overflow-hidden" : ""
+        }`}
+      >
+        {product && (
+          <div
+            aria-label="product image slider"
+            className="relative w-full h-[calc(100vw)] md:w-[445px] md:h-[445px]"
           >
-            By{" "}
             <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
+              src={product.images[mainImageIndex]}
+              alt="product image"
+              fill
+              className="rounded-none md:rounded-[15px] mb-8 cursor-pointer hidden md:block"
+              onClick={() => setIsLightBoxOpen(true)}
             />
-          </a>
+
+            <Image
+              src={product.images[mainImageIndex]}
+              alt="product image"
+              fill
+              className="rounded-none md:rounded-[15px] mb-8 cursor-pointer md:hidden"
+            />
+            <button
+              className="w-10 h-10 rounded-full bg-white absolute top-[50%] right-10 -translate-y-[50%] translate-x-[50%] flex items-center justify-center group md:hidden"
+              onClick={() =>
+                setMainImageIndex(
+                  mainImageIndex === product.images.length - 1
+                    ? 0
+                    : mainImageIndex + 1
+                )
+              }
+            >
+              <NextIcon />
+            </button>
+            <button
+              className="w-10 h-10 rounded-full bg-white absolute top-[50%] left-10 -translate-y-[50%] -translate-x-[50%] flex items-center justify-center group md:hidden"
+              onClick={() =>
+                setMainImageIndex(mainImageIndex === 0 ? 0 : mainImageIndex - 1)
+              }
+            >
+              <PrevIcon />
+            </button>
+            <div
+              aria-label="thumbnail images"
+              className="hidden md:flex md:items-center md:justify-between md:gap-8 md:mt-[455px]"
+            >
+              {product.thumbnails.map((thumbnail, index) => (
+                <Image
+                  aria-active={activeThumbIndex === index}
+                  key={index}
+                  src={thumbnail}
+                  alt="thumbnail image"
+                  width={88}
+                  height={88}
+                  className={`rounded-[10px] hover:opacity-50 cursor-pointer transition-all duration-300 ${
+                    activeThumbIndex === index
+                      ? "opacity-50 border-2 border-[#FF7E1B]"
+                      : ""
+                  }`}
+                  onClick={() => handleClickThumb(index)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+        <div
+          aria-labelledby="productTitle"
+          aria-describedby="productDescription"
+          className="p-6 md:p-0"
+        >
+          <p className="text-[#69707D] text-[12px] md:text-[13px] space-x-[2px] uppercase font-bold mb-6">
+            Sneaker Company
+          </p>
+          <h1
+            id="productTitle"
+            className="text-[28px] md:text-[44px] font-bold text-[#1D2026] leading-12 mb-8"
+          >
+            Fall Limited Edition Sneakers
+          </h1>
+          <p
+            className="text-[#69707D] font-normal text-[15px] md:text-[16px] leading-6 md:leading-7"
+            id="productDescription"
+          >
+            These low-profile sneakers are your perfect casual wear companion.
+            Featuring a durable rubber outer sole, they’ll withstand everything
+            the weather can offer.
+          </p>
+          <div
+            aria-label="price and discount"
+            className="flex items-start justify-between md:justify-start gap-6 mt-6"
+          >
+            <div className="flex flex-row justify-between items-center gap-4 md:gap-0 md:flex-col md:items-start">
+              <p className="text-black text-[28px] font-bold">$125.00</p>
+              <p className="text-[#69707D] text-[16px] font-bold text-overline line-through">
+                $125.00
+              </p>
+            </div>
+            <p className="text-white  bg-black text-[16px] font-bold py-1 px-2 rounded-md">
+              50%
+            </p>
+          </div>
+          <div
+            aria-label="quantity and add to cart"
+            className="flex flex-col md:flex-row items-center gap-4 mt-8"
+          >
+            {product && <Counter product={product} />}
+            <button
+              className="bg-[var(--orange)] text-[#1D2026] flex items-center gap-4 py-4 px-20 rounded-[10px] hover:bg-[#FFAB6A] disabled:bg-[#FFAB6A] disabled:cursor-not-allowed w-full md:w-auto"
+              onClick={handleClickAddToCart}
+              disabled={quantity === 0}
+            >
+              <CartIcon />
+              <span className="text-[16px] font-bold text-[#1D2026]">
+                Add to cart
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+        <CartModal isCartModalOpen={isCartModalOpen} />
+      </main>
+      {isLightBoxOpen && product && (
+        <LightBox
+          onClose={handleCloseLightBox}
+          index={mainImageIndex}
+          images={product.images}
+          thumbnails={product?.thumbnails}
         />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      )}
+    </>
   );
 }
